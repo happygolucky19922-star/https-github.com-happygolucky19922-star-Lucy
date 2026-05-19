@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      window.addEventListener('error', (e) => {
+        if (e.message && (e.message.includes('ResizeObserver') || e.message === 'Script error.')) {
+          e.stopImmediatePropagation();
+        }
+      });
+      const _error = console.error;
+      console.error = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('ResizeObserver')) return;
+        _error.apply(console, args);
+      };
+    </script>
+  </head>
+  <body style="background-color: #07070f; color: white;">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

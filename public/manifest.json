@@ -1,0 +1,21 @@
+{
+  "name": "LUCY: Agentic Lab",
+  "short_name": "LUCY",
+  "description": "Capybara-tier agentic laboratory with System-2 reasoning.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0b",
+  "theme_color": "#00f2ff",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/lucy192/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/lucy512/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

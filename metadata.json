@@ -1,0 +1,12 @@
+{
+  "name": "Remix: Lucy",
+  "description": "Premium, local-first AI platform for desktop. Featuring universal model loading, real-time hardware mastery, autonomous System-2 agents, and a high-end App Forge builder.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
