@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { AppState } from '../types';
+import DriveManager from './DriveManager';
 
 interface SettingsViewProps {
   state: AppState;
@@ -13,6 +14,34 @@ interface SettingsViewProps {
 }
 
 export default function SettingsView({ state, updateState }: SettingsViewProps) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleDownloadZip = async () => {
+    if (isExporting) return;
+    try {
+      setIsExporting(true);
+      const response = await fetch('/api/export-zip');
+      if (!response.ok) throw new Error('Fetch failed');
+      const blob = await response.blob();
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Lucy-Fully-Functional-Build.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+         console.error('Download failed:', err);
+         alert('Failed to download: ' + err.message);
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="p-8 h-full bg-black overflow-y-auto custom-scrollbar">
       <div className="max-w-xl mx-auto space-y-12 pb-24">
@@ -22,6 +51,27 @@ export default function SettingsView({ state, updateState }: SettingsViewProps) 
         </header>
 
         <div className="space-y-8">
+          {/* Export Project Source */}
+          <section className="glass p-8 rounded-[40px] border-white/5 space-y-6 bg-gradient-to-br from-white/2 to-transparent">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-1">Export Full Project</h3>
+              <p className="text-sm text-white/40">Download the entire fully functional application source (includes configurations, dotfiles, and assets). Will let you choose the save location.</p>
+            </div>
+            <button 
+              onClick={handleDownloadZip}
+              disabled={isExporting}
+              className="inline-flex w-full items-center justify-center gap-3 px-6 py-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Database size={16} className={cn(isExporting && "animate-pulse")} />
+              {isExporting ? 'Packaging Build...' : 'Download ZIP Archive'}
+            </button>
+          </section>
+
+          {/* Drive Manager Section */}
+          <div className="h-[400px]">
+            <DriveManager />
+          </div>
+
           {/* Hardware Mastery */}
           <section className="glass p-8 rounded-[40px] border-white/5 space-y-8 bg-gradient-to-br from-white/2 to-transparent">
             <h3 className="text-xs font-black uppercase tracking-widest text-white/40 flex items-center gap-3">

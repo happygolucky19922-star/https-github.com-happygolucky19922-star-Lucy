@@ -9,6 +9,7 @@ import {
   Code2,
   ListChecks,
   ChevronRight,
+  ChevronDown,
   Plus,
   Compass,
   Layout,

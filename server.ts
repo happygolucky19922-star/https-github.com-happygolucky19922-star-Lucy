@@ -4,6 +4,7 @@ import { WebSocketServer } from 'ws';
 import path from 'path';
 import { spawn } from 'child_process';
 import fs from 'fs';
+import { ZipArchive } from 'archiver';
 
 async function startServer() {
   const app = express();
@@ -58,6 +59,40 @@ async function startServer() {
       res.send(data);
     } catch (e) {
       res.status(500).send("Proxy error");
+    }
+  });
+
+  app.get('/api/export-zip', async (req, res) => {
+    try {
+      const archive = new ZipArchive({ zlib: { level: 9 } });
+
+      res.attachment('lucy-source.zip');
+      archive.pipe(res);
+
+      const excludes = ['node_modules', '.git', 'dist', 'coverage', 'app', '.next', 'test.zip', 'test_dump.zip', '.env', '.env.local'];
+      
+      const addDirToArchive = (dir: string) => {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+          if (excludes.includes(file)) continue;
+          
+          const fullPath = path.join(dir, file);
+          const stat = fs.statSync(fullPath);
+          
+          if (stat.isDirectory()) {
+            archive.directory(fullPath, fullPath);
+          } else {
+            archive.file(fullPath, { name: fullPath });
+          }
+        }
+      };
+
+      addDirToArchive('.');
+
+      await archive.finalize();
+    } catch (e: any) {
+      console.error(e);
+      res.status(500).json({ error: 'Failed to create zip', details: e.message, stack: e.stack });
     }
   });
 

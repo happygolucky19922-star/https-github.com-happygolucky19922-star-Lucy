@@ -16,6 +16,7 @@ export interface Model {
   source?: string;
   quantization?: string;
   path?: string;
+  loadTarget?: string;
   last_modified?: number;
   patentQuant?: boolean;
   patentDistill?: boolean;

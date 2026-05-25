@@ -56,10 +56,10 @@ export default function UniversalModelLoader({ state, updateState, notify }: Uni
     await new Promise(r => setTimeout(r, 1000));
     updateState(s => ({
       ...s,
-      models: s.models.map(m => m.id === model.id ? { ...m, isLoaded: true } : { ...m, isLoaded: false })
+      models: s.models.map(m => m.id === model.id ? { ...m, isLoaded: true } : m)
     }));
     setLoadingModelId(null);
-    notify(`Model ${model.name} is now authoritative.`);
+    notify(`Model ${model.name} is now loaded into ${model.loadTarget || 'App Forge'}.`);
   };
 
   const removeModel = (id: string) => {
@@ -76,6 +76,52 @@ export default function UniversalModelLoader({ state, updateState, notify }: Uni
     }));
     notify("Neural configuration stabilized.");
     setEditingModel(null);
+  };
+
+  const exportModelsConfig = () => {
+    try {
+      const dataStr = JSON.stringify(state.models, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const exportFileDefaultName = `neural-cores-export-${Date.now()}.json`;
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      notify("Neural Directory exported successfully for USB/Offline transfer.");
+    } catch(e) {
+      notify("Export failed.");
+    }
+  };
+
+  const importModelsConfig = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result as string);
+        if (Array.isArray(imported)) {
+          updateState(s => {
+            const existingIds = new Set(s.models.map(m => m.id));
+            const newModels = imported.filter(m => !existingIds.has(m.id));
+            if (newModels.length === 0) {
+               return s; // Notify below
+            }
+            return {
+              ...s,
+              models: [...newModels, ...s.models]
+            }
+          });
+          notify(`Imported new models from configuration.`);
+        } else {
+          notify("Invalid configuration format.");
+        }
+      } catch (err) {
+        notify("Failed to parse configuration.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // reset
   };
 
   const [sortBy, setSortBy] = useState<'name' | 'rarity' | 'modified' | 'performance'>('modified');
@@ -198,7 +244,7 @@ export default function UniversalModelLoader({ state, updateState, notify }: Uni
           <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40 text-white">Universal Core Management & Calibration</p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
            <button 
              onClick={() => setShowLoadedOnly(!showLoadedOnly)}
              className={cn(
@@ -222,8 +268,24 @@ export default function UniversalModelLoader({ state, updateState, notify }: Uni
             onClick={() => setShowHFImport(true)}
             className="bg-white/5 text-white/40 border border-white/5 p-4 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 hover:bg-[var(--p)]/20 hover:text-[var(--p)] hover:border-[var(--p)]/50 transition-all"
           >
-            <Cloud size={16} /> DOWNLOAD FROM HF
+            <Cloud size={16} /> HF / GITHUB
           </button>
+
+          <button 
+            onClick={exportModelsConfig}
+            className="bg-white/5 text-white/40 border border-white/5 p-4 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 hover:text-blue-400 hover:border-blue-400/50 transition-all"
+            title="Export Models Configuration for USB/Transfer"
+          >
+            <Save size={16} /> EXPORT
+          </button>
+
+          <label 
+            className="bg-white/5 text-white/40 border border-white/5 p-4 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 hover:text-emerald-400 hover:border-emerald-400/50 transition-all cursor-pointer"
+            title="Import Models Configuration"
+          >
+            <HardDrive size={16} /> IMPORT
+            <input type="file" accept=".json" onChange={importModelsConfig} className="hidden" />
+          </label>
 
           <button 
             onClick={() => setShowCustomModel(true)}
@@ -576,6 +638,25 @@ export default function UniversalModelLoader({ state, updateState, notify }: Uni
                   </td>
                   <td className="p-8 text-right pr-12">
                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <select
+                          value={model.loadTarget || 'App Forge'}
+                          onChange={(e) => {
+                             const newTarget = e.target.value;
+                             updateState(s => ({
+                               ...s,
+                               models: s.models.map(m => m.id === model.id ? { ...m, loadTarget: newTarget } : m)
+                             }));
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-black/40 border border-white/10 rounded-xl p-2 px-3 text-[9px] font-black uppercase text-white/50 outline-none focus:border-[var(--p)] transition-all cursor-pointer mr-2 max-w-[120px]"
+                        >
+                          <option value="App Forge">App Forge</option>
+                          <option value="Agentic Agent">Agentic Agent</option>
+                          <option value="Lucy Live">Lucy Live</option>
+                          <option value="Terminal">Terminal</option>
+                          <option value="Model Evolution Lab">Model Evolution Lab</option>
+                          <option value="Dream Mode">Dream Mode</option>
+                        </select>
                         <button 
                           onClick={() => { setHfModelId(model.name); setShowHFImport(true); }}
                           className="p-2.5 rounded-xl bg-white/5 text-white/40 hover:text-blue-400 hover:bg-blue-400/10 transition-all" 
@@ -598,15 +679,32 @@ export default function UniversalModelLoader({ state, updateState, notify }: Uni
                            <Trash2 size={14} />
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); if (!model.isLoaded) loadModel(model); }}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (!model.isLoaded) loadModel(model); 
+                            else {
+                               // Unload model
+                               updateState(s => ({
+                                 ...s,
+                                 models: s.models.map(m => m.id === model.id ? { ...m, isLoaded: false } : m)
+                               }));
+                               notify(`Model ${model.name} has been unloaded from ${model.loadTarget || 'App Forge'}.`);
+                            }
+                          }}
                           disabled={loadingModelId === model.id}
                           className={cn(
                             "px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all min-w-[100px] justify-center",
-                            model.isLoaded ? "bg-emerald-500 text-black cursor-default" : "bg-white text-black hover:bg-[var(--p)] hover:text-white"
+                            model.isLoaded ? "bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30" : "bg-white text-black hover:bg-[var(--p)] hover:text-white"
                           )}
                         >
-                           {loadingModelId === model.id ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
-                           {model.isLoaded ? "ACTIVE" : "LOAD"}
+                           {loadingModelId === model.id ? (
+                             <Loader2 size={12} className="animate-spin" />
+                           ) : model.isLoaded ? (
+                             <Zap size={12} />
+                           ) : (
+                             <Play size={12} />
+                           )}
+                           {model.isLoaded ? "UNLOAD" : "LOAD"}
                         </button>
                      </div>
                   </td>

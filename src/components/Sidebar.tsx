@@ -16,6 +16,10 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
   const categories = [
     {
       group: 'Core',
+      color: 'text-pink-400',
+      hoverBg: 'hover:bg-pink-500/10 hover:border-pink-500/20 hover:text-pink-400',
+      activeBg: 'bg-pink-500/10',
+      activeBorder: 'border-pink-500/30',
       items: [
         { id: 'chat', label: 'Chat', icon: MessageSquare },
         { id: 'lucy_chat', label: 'Lucy Live', icon: ShieldCheck },
@@ -25,6 +29,10 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     },
     {
       group: 'Game Modes',
+      color: 'text-amber-400',
+      hoverBg: 'hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-400',
+      activeBg: 'bg-amber-500/10',
+      activeBorder: 'border-amber-500/30',
       items: [
         { id: 'gauntlet', label: 'Gauntlet Arena', icon: Target },
         { id: 'duel', label: 'VS Duel', icon: Swords },
@@ -33,6 +41,10 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     },
     {
       group: 'Operations',
+      color: 'text-emerald-400',
+      hoverBg: 'hover:bg-emerald-500/10 hover:border-emerald-500/20 hover:text-emerald-400',
+      activeBg: 'bg-emerald-500/10',
+      activeBorder: 'border-emerald-500/30',
       items: [
         { id: 'tuning', label: 'Fine Tuning', icon: FlaskConical },
         { id: 'lab', label: 'Model Lab', icon: FlaskConical },
@@ -44,6 +56,10 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     },
     {
       group: 'Infrastructure',
+      color: 'text-cyan-400',
+      hoverBg: 'hover:bg-cyan-500/10 hover:border-cyan-500/20 hover:text-cyan-400',
+      activeBg: 'bg-cyan-500/10',
+      activeBorder: 'border-cyan-500/30',
       items: [
         { id: 'executive', label: 'Executive Dashboard', icon: Activity },
         { id: 'perf', label: 'Performance', icon: Zap },
@@ -55,6 +71,10 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     },
     {
       group: 'System',
+      color: 'text-purple-400',
+      hoverBg: 'hover:bg-purple-500/10 hover:border-purple-500/20 hover:text-purple-400',
+      activeBg: 'bg-purple-500/10',
+      activeBorder: 'border-purple-500/30',
       items: [
         { id: 'achievements', label: 'Achievements', icon: Star },
         { id: 'plugins', label: 'Plugins', icon: Box },
@@ -123,7 +143,7 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
         {categories.map((cat) => (
           <div key={cat.group} className="space-y-1">
             {!collapsed && (
-              <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] px-4 mb-3 block italic">
+              <label className={cn("text-[9px] font-black uppercase tracking-[0.4em] px-4 mb-3 block italic opacity-80", cat.color)}>
                 {cat.group}
               </label>
             )}
@@ -132,22 +152,34 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-4 p-3.5 rounded-2xl transition-all group relative",
-                  activeTab === item.id ? "bg-[var(--p)]/10 text-white shadow-[0_0_15px_rgba(var(--p-rgb),0.05)] border border-[var(--p)]/20" : "text-white/40 hover:text-white hover:bg-white/5"
+                  "w-full flex items-center gap-4 p-3 rounded-2xl transition-all duration-300 group relative border",
+                  activeTab === item.id 
+                    ? `text-white shadow-[0_4px_15px_rgba(0,0,0,0.5),inset_0_2px_0_rgba(255,255,255,0.1),inset_0_-2px_0_rgba(0,0,0,0.2)] ${cat.activeBg} ${cat.activeBorder} translate-y-0.5` 
+                    : `text-white/40 border-transparent hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] ${cat.hoverBg}`
                 )}
               >
-                <item.icon size={18} className={cn("shrink-0 transition-colors", activeTab === item.id ? "text-[var(--p)]" : "group-hover:text-white")} />
+                <div className={cn(
+                  "p-2 rounded-xl transition-all duration-300 border",
+                  activeTab === item.id 
+                    ? `bg-black/50 border-black/50 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] ${cat.color}`
+                    : `bg-white/5 border-white/10 shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] group-hover:shadow-[0_6px_12px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] group-hover:${cat.color} group-hover:bg-white/10 group-hover:border-white/20`
+                )}>
+                  <item.icon size={16} className={cn(
+                    "shrink-0 transition-all duration-300", 
+                    activeTab === item.id ? "drop-shadow-[0_0_8px_currentColor]" : "group-hover:drop-shadow-[0_0_12px_currentColor]"
+                  )} />
+                </div>
                 {!collapsed && (
                   <span className={cn(
-                    "font-bold text-[11px] uppercase tracking-[0.1em] italic",
-                    activeTab === item.id ? "text-white" : ""
+                    "font-bold text-[11px] uppercase tracking-[0.1em] italic transition-all duration-300 drop-shadow-md",
+                    activeTab === item.id ? "text-white" : "group-hover:text-white group-hover:translate-x-1"
                   )}>
                     {item.label}
                   </span>
                 )}
                 {activeTab === item.id && !collapsed && (
-                  <div className="absolute inset-y-0 right-0 w-1 flex items-center">
-                     <div className="h-6 w-full bg-[var(--p)] rounded-l-full shadow-[0_0_10px_var(--p)]" />
+                  <div className="absolute inset-y-0 right-0 w-1.5 flex items-center pr-0.5">
+                     <div className={cn("h-8 w-1.5 rounded-full shadow-[0_0_15px_currentColor]", cat.color.replace('text-', 'bg-'))} />
                   </div>
                 )}
               </button>
